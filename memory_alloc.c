@@ -53,7 +53,12 @@ void memory_print() {
   printf("\tStatus: "); memory_error_print(m.error_no);
   printf("\tContent:  ");
 
-  /* TODO: browse the available blocks and print their index */
+  int pointer = m.first_block;
+  do {
+      printf("[%ld] -> ", m.blocks[pointer]);
+      pointer = m.blocks[pointer];
+  } while(m.blocks[pointer] != NULL_BLOCK);
+  printf("NULL_BLOCK");
 
   printf("\n");
   printf("---------------------------------\n");
