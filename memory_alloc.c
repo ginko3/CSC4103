@@ -13,6 +13,11 @@ void memory_init() {
     m.first_block = 0;
 
     m.error_no = E_SUCCESS;
+
+    for (size_t i = 0; i < m.available_blocks-1; i++) {
+        m.blocks[i] = i+1;
+    }
+    m.blocks[m.available_blocks-1] = NULL_BLOCK;
 }
 
 /* Return the number of consecutive blocks starting from first */
