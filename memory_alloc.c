@@ -22,8 +22,12 @@ void memory_init() {
 
 /* Return the number of consecutive blocks starting from first */
 int nb_consecutive_blocks(int first) {
-  /* TODO */
-  return -1;
+  int pointer = first;
+  while (m.blocks[pointer] == pointer + 1) {
+      pointer ++;
+  }
+  
+  return pointer - first + 1;
 }
 
 /* Reorder memory blocks */
