@@ -1,0 +1,8 @@
+# Compiled filed
+*.o
+
+# Exe
+out
+
+# Other
+other
