@@ -10,7 +10,7 @@
 void memory_init() {
     m.available_blocks = DEFAULT_SIZE;
 
-    m.first_block = 0;
+    m.first_block = 1;
 
     m.error_no = E_SUCCESS;
 
