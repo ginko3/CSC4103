@@ -10,7 +10,7 @@
 void memory_init() {
     m.available_blocks = DEFAULT_SIZE;
 
-    m.first_block = 1;
+    m.first_block = 0;
 
     m.error_no = E_SUCCESS;
 
@@ -18,6 +18,10 @@ void memory_init() {
         m.blocks[i] = i+1;
     }
     m.blocks[m.available_blocks-1] = NULL_BLOCK;
+    // m.blocks[4] = 12;
+    // m.blocks[12] = 13;
+    // m.blocks[13] = 14;
+    // m.blocks[14] = NULL_BLOCK;
 }
 
 /* Return the number of consecutive blocks starting from first */
@@ -26,7 +30,7 @@ int nb_consecutive_blocks(int first) {
   while (m.blocks[pointer] == pointer + 1) {
       pointer ++;
   }
-  
+
   return pointer - first + 1;
 }
 
@@ -39,29 +43,50 @@ void memory_reorder() {
  * return -1 in case of an error
  */
 int memory_allocate(size_t size) {
-  int pointer = m.first_block;
+
   int n_blocks_necessaires = (int)ceil(size / 8.0);
+  if (n_blocks_necessaires > m.available_blocks) {
+      m.error_no = E_NOMEM;
+      return -1;
+  }
+
+  int pointer = m.first_block;
+  int old = pointer;
   int current_size = nb_consecutive_blocks(pointer);
 
   while (current_size < n_blocks_necessaires) {
+      old = pointer;
       pointer = m.blocks[pointer+current_size-1];
-      current_size = nb_consecutive_blocks(pointer);
 
       // End of blocks
-      if (m.blocks[pointer] == NULL_BLOCK) {
+      if (pointer == NULL_BLOCK) {
           m.error_no = E_NOMEM;
           return -1;
       }
+
+      current_size = nb_consecutive_blocks(pointer);
   }
 
   // We found required size
   m.available_blocks -= n_blocks_necessaires;
+  if (old == m.first_block) {
+      m.first_block = m.blocks[pointer+n_blocks_necessaires-1];
+  } else {
+      m.blocks[old] = m.blocks[pointer+n_blocks_necessaires-1];
+  }
   return pointer;
 }
 
 /* Free the block of data starting at address */
 void memory_free(int address, size_t size) {
     int n_blocks = ceil(size / 8.0);
+    int pointer = address;
+    for (size_t i = 0; i < n_blocks-1; i++) {
+        m.blocks[pointer] = pointer+1;
+        pointer ++;
+    }
+    m.blocks[pointer] = m.first_block;
+    m.first_block = address;
     m.available_blocks += n_blocks;
 }
 
@@ -75,11 +100,15 @@ void memory_print() {
   printf("\tContent:  ");
 
   int pointer = m.first_block;
-  do {
-      printf("[%ld] -> ", m.blocks[pointer]);
+  while(pointer != NULL_BLOCK) {
+      printf("[%d] -> ", pointer);
       pointer = m.blocks[pointer];
-  } while(m.blocks[pointer] != NULL_BLOCK);
+  }
   printf("NULL_BLOCK");
+
+  // printf("\n\tBEFORE\n");
+  // printf("\t\t%d\n", memory_allocate(8*3+1));
+  // printf("\tAFTER\n");
 
   printf("\n");
   printf("---------------------------------\n");
@@ -188,11 +217,12 @@ void test_exo1_free_blocks() {
 
   allocated_blocks[2] = test_alloc(2*sizeof(memory_page_t)); /* allocate 2 memory blocks */
   assert_int_equal(m.available_blocks, DEFAULT_SIZE-4);
-
+  memory_print();
+  printf("%d\n", allocated_blocks[0]);
   test_memory_free(allocated_blocks[0], 1); /* free 1 byte */
-
+  memory_print();
   test_memory_free(allocated_blocks[1], sizeof(memory_page_t)); /* free 1 block */
-
+    memory_print();
   test_memory_free(allocated_blocks[2], 2*sizeof(memory_page_t)); /* free 2 blocks */
   assert_int_equal(m.available_blocks, DEFAULT_SIZE);
 
@@ -226,7 +256,7 @@ void test_exo1_multiple_alloc() {
 /* test allocation when the system is running out of memory */
 void test_exo1_out_of_memory() {
   test_exo1_memory_init();
-
+  memory_print();
   int allocated_blocks[DEFAULT_SIZE];
   /* First, use all the memory */
   for(int i=0; i<DEFAULT_SIZE; i++) {
@@ -235,7 +265,6 @@ void test_exo1_out_of_memory() {
     assert_int_equal(m.available_blocks, DEFAULT_SIZE-(i+1));
   }
   assert_int_equal(m.available_blocks, 0); // no more memory
-
   /* Now, try to allocate one more byte */
   allocated_blocks[1] = memory_allocate(1);
   assert_int_equal(allocated_blocks[1], -1); // memory_allocate should return an error
