@@ -48,7 +48,7 @@ int memory_allocate(size_t size) {
       current_size = nb_consecutive_blocks(pointer);
 
       // End of blocks
-      if (m.blocks[pointer] != NULL_BLOCK) {
+      if (m.blocks[pointer] == NULL_BLOCK) {
           m.error_no = E_NOMEM;
           return -1;
       }
