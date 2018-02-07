@@ -61,7 +61,8 @@ int memory_allocate(size_t size) {
 
 /* Free the block of data starting at address */
 void memory_free(int address, size_t size) {
-  /* TODO */
+    int n_blocks = ceil(size / 8.0);
+    m.available_blocks += n_blocks;
 }
 
 /* Print information on the available blocks of the memory allocator */
