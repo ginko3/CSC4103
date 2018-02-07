@@ -39,8 +39,24 @@ void memory_reorder() {
  * return -1 in case of an error
  */
 int memory_allocate(size_t size) {
-  /* TODO */
-  return -1;
+  int pointer = m.first_block;
+  int n_blocks_necessaires = (int)ceil(size / 8.0);
+  int current_size = nb_consecutive_blocks(pointer);
+
+  while (current_size < n_blocks_necessaires) {
+      pointer = m.blocks[pointer+current_size-1];
+      current_size = nb_consecutive_blocks(pointer);
+
+      // End of blocks
+      if (m.blocks[pointer] != NULL_BLOCK) {
+          m.error_no = E_NOMEM;
+          return -1;
+      }
+  }
+
+  // We found required size
+  m.available_blocks -= n_blocks_necessaires;
+  return pointer;
 }
 
 /* Free the block of data starting at address */
